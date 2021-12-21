@@ -6,7 +6,7 @@
 #define BUFFER_SIZE      1
 
 #define _ZERO            0
-#define _COLUMNS         8
+#define _COLUMNS         32
 
 #define _VRB_TYPE_SINGLE 2
 #define _VRB_TYPE_ARRAY  3
