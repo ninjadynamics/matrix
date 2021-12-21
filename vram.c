@@ -43,7 +43,6 @@ byte vram_buffer[VRAM_BUFFER_SIZE] = {
     MSB(NTADR_A(0, 0)), LSB(NTADR_A(0, 0)), 0,
     MSB(NTADR_A(0, 0)), LSB(NTADR_A(0, 0)), 0,
     MSB(NTADR_A(0, 0)), LSB(NTADR_A(0, 0)), 0,
-    MSB(NTADR_A(0, 0)), LSB(NTADR_A(0, 0)), 0,    
-  
+    MSB(NTADR_A(0, 0)), LSB(NTADR_A(0, 0)), 0,      
     NT_UPD_EOF
 };
