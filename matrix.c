@@ -84,17 +84,24 @@ void main(void) {
       chars[x] = (r >= density);      
     }       
         
-    // Draw a row of characters at different
-    // Y positions given by start[x] + y
-    for (x = 0; x < 32; ++x) {
-      chars[x] = !chars[x] ? NULL : CHR_START + (rand8() % CHR_AMOUNT);
+    // Put the characters on screen    
+    for (x = 0; x < 32; ++x) {      
+      // Set the random character in the buffer
+      if (chars[x]) chars[x] = CHR_START + (rand8() % CHR_AMOUNT);
+      
+      // Calculate the Y tile and pixel positions
       tileY = (start[x] + y) % 30; pixelY = (tileY * 8);
+      
+      // Draw the character in white using a sprite
       sprId = oam_spr(x * 8, pixelY - 1, chars[x], 0x03, sprId);
-      #ifdef USE_OPAQUE_CHAR
+      
+      #ifdef USE_OPAQUE_CHAR      
+      // Draw an opaque blank character in order to "erase" what's below
       sprId = oam_spr(x * 8, pixelY - 1, 0x0F, 0x02, sprId); // Optional    
       #endif
-      putChar(x, x, tileY, chars[x]);      
       
+      // Draw the character in green using a background tile
+      putChar(x, x, tileY, chars[x]);            
     }   
     
     // Clean-up
@@ -102,7 +109,7 @@ void main(void) {
     oam_hide_rest(sprId); sprId = 0;
     ppu_wait_nmi();    
     
-    // Loop
+    // Increase Y position and loop
     ++y;    
   };
 }
