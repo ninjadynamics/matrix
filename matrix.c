@@ -6,6 +6,12 @@
 //#link "vram.c"
 //#link "chr_matrix.s"
 
+//#define USE_OPAQUE_CHAR 
+
+#define CHR_MASK   (0x0F)
+#define CHR_START  (0x60)
+#define CHR_AMOUNT (0xFF - CHR_START)
+
 static word addr;
 
 static char x;
@@ -33,58 +39,70 @@ void putChar(char _i, char _x, char _y, char _c) {
 // main function, run after console reset
 void main(void) {  
 
-  // set palette colors
-  pal_col(0, 0x0F);	// black
-  pal_col(1, 0x0F);	// black
-  pal_col(2, 0x2A);	// green
-  pal_col(3, 0x30);	// white  
+  // Characters
+  pal_col( 0, 0x0F);	// black
+  pal_col( 1, 0x0F);	// black
+  pal_col( 2, 0x2A);	// green
+  pal_col( 3, 0x30);	// white  
   
+  // Cursor
   pal_col(28, 0x0F);	// black
   pal_col(29, 0x0F);	// black
-  pal_col(30, 0x2A);	// character
-  pal_col(31, 0x30);	// cursor
-
+  pal_col(30, 0x30);	// white
+  pal_col(31, 0x30);	// white
   
   // Set the VRAM buffer
   set_vram_update(vram_buffer);  
   
+  // Clear the VRAM buffer
   vram_adr(NTADR_A(0, 0));
   vram_fill(NULL, 1024);  
   
-  // enable PPU rendering (turn on screen)
+  // Enable PPU rendering (turn on screen)
   ppu_on_all();  
   
+  // Define the Y starting positions for each column
   for (i = 0; i < 32; ++i) {
     start[i] = rand8() % 30;
   }  
         
+  // Set the code density
   density = 248;
   dir = -1; 
 
-  while (1) {   
+  // Enter the Matrix
+  while (1) {
     
+    // Make the density oscilate
     density += dir;
     if (density == 224 || density == 248) dir = -dir;
     
+    // Don't ask me, it just works
     for (x = 0; x < 32; ++x) {      
       r = rand8();
       if (r < 192) continue;
-      r < density ? (chars[x] = 0): chars[x] = rand8() % 0x70;
+      chars[x] = (r >= density);      
     }       
         
-    // Green
+    // Draw a row of characters at different
+    // Y positions given by start[x] + y
     for (x = 0; x < 32; ++x) {
-      chars[x] = !chars[x] ? 0 : (rand8() % 0x70);
+      chars[x] = !chars[x] ? NULL : CHR_START + (rand8() % CHR_AMOUNT);
       tileY = (start[x] + y) % 30; pixelY = (tileY * 8);
-      sprId = oam_spr(x * 8, pixelY - 1, 0x70 + chars[x], 0x03, sprId);
-      //sprId = oam_spr(x * 8, pixelY - 1, 0xFF, 0x02, sprId);      
+      sprId = oam_spr(x * 8, pixelY - 1, chars[x], 0x03, sprId);
+      #ifdef USE_OPAQUE_CHAR
+      sprId = oam_spr(x * 8, pixelY - 1, 0x0F, 0x02, sprId); // Optional    
+      #endif
       putChar(x, x, tileY, chars[x]);      
       
     }   
+    
+    // Clean-up
     vram_buffer[LAST_INDEX_OF(vram_buffer)] = NT_UPD_EOF;
-    ppu_wait_nmi();
-    oam_hide_rest(sprId);    
-    sprId = 0;
+    oam_hide_rest(sprId); sprId = 0;
+    ppu_wait_nmi();    
+    
+    // Loop
     ++y;    
   };
 }
